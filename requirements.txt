@@ -1,0 +1,5 @@
+fastapi
+uvicorn[standard]
+python-binance
+python-dotenv
+jinja2

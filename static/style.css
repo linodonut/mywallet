@@ -1,0 +1,156 @@
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f5f5f5;
+}
+
+.page-container {
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
+  gap: 16px;
+  padding: 16px;
+}
+
+.ad-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ad-box {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 120px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.main-content {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+header p {
+  margin: 4px 0 16px 0;
+  color: #666;
+}
+
+section {
+  margin-top: 24px;
+}
+
+h2 {
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+h3 {
+  margin-top: 24px;
+  font-size: 16px;
+}
+
+#balance-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+#balance-table th,
+#balance-table td {
+  border: 1px solid #ddd;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+#balance-table th {
+  background: #fafafa;
+}
+
+#comment-section {
+  margin-top: 32px;
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+#comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+#comment-input {
+  width: 100%;
+  resize: vertical;
+  padding: 8px;
+  font-size: 14px;
+}
+
+#comment-submit {
+  align-self: flex-end;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #ffd54f;
+  font-size: 14px;
+}
+
+#comment-submit:hover {
+  opacity: 0.9;
+}
+
+#comment-list {
+  list-style: none;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#comment-list li {
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.comment-time {
+  font-size: 11px;
+  color: #999;
+}
+
+.comment-body {
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.disclaimer {
+  font-size: 12px;
+  color: #777;
+}
+
+footer {
+  margin-top: 24px;
+  font-size: 12px;
+  color: #999;
+  text-align: right;
+}

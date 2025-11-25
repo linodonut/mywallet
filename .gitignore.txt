@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# local data files
+balance_history.json
+comments.json
+
+# venv
+venv/
+.envrc

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Please, pray my wallet!</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <!-- 그래프용 Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="page-container">
+    <!-- 왼쪽 광고 영역 -->
+    <aside class="ad-column">
+      <div class="ad-box">광고 영역 1</div>
+      <div class="ad-box">광고 영역 2</div>
+    </aside>
+
+    <!-- 메인 대시보드 -->
+    <main class="main-content">
+      <header>
+        <h1>Please, pray my wallet! 🙏</h1>
+        <p>이재현의 실시간 코인 지갑 상황 대공개</p>
+      </header>
+
+      <!-- 요약 섹션 -->
+      <section id="summary-section">
+        <h2>오늘의 지갑 요약</h2>
+        <div id="summary-content">
+          <p>로딩 중...</p>
+        </div>
+      </section>
+
+      <!-- 선물 USDT 잔고 + 그래프 섹션 -->
+      <section id="balance-section">
+        <h2>보유 자산 현황 (Binance 선물 USDT)</h2>
+        <p id="futures-balance-text">현재 잔고: 로딩 중...</p>
+        <canvas id="futures-balance-chart" height="120"></canvas>
+      </section>
+
+      <!-- 댓글 섹션 -->
+      <section id="comment-section">
+        <h2>기도 & 한마디 남기기</h2>
+
+        <div id="comment-form">
+          <textarea id="comment-input" rows="3"
+            placeholder="지갑을 위한 기도, 조언, 놀릴거리(?) 뭐든 좋습니다. 익명으로 남겨져요."></textarea>
+          <button id="comment-submit">댓글 등록</button>
+        </div>
+
+        <ul id="comment-list">
+          <li>댓글을 불러오는 중입니다...</li>
+        </ul>
+      </section>
+
+      <!-- 안내 문구 -->
+      <section id="notice-section">
+        <h3>⚠️ 안내</h3>
+        <p class="disclaimer">
+          이 사이트의 모든 정보는 <strong>교육 및 기록 목적</strong>이며,
+          <strong>투자 권유가 아닙니다.</strong><br />
+          자동매매 및 코인 투자는 모든 손익이 사용자 본인에게 귀속됩니다.
+          과거 수익률은 미래의 수익을 보장하지 않습니다.
+        </p>
+      </section>
+
+      <footer>
+        <p>© 2025 Please, pray my wallet! / LeenoDonut</p>
+      </footer>
+    </main>
+
+    <!-- 오른쪽 광고 영역 -->
+    <aside class="ad-column">
+      <div class="ad-box">광고 영역 3</div>
+      <div class="ad-box">광고 영역 4</div>
+    </aside>
+  </div>
+
+  <script>
+    // ===== 그래프 관련 전역 변수 =====
+    let balanceChart = null;
+    let balanceLabels = [];
+    let balanceData = [];
+
+    // 그래프 생성/업데이트
+    function renderOrUpdateChart() {
+      const ctx = document.getElementById("futures-balance-chart").getContext("2d");
+
+      if (!balanceChart) {
+        balanceChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: balanceLabels,
+            datasets: [{
+              label: "선물 USDT 잔고",
+              data: balanceData,
+              fill: false,
+              tension: 0.2
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                ticks: { autoSkip: true, maxTicksLimit: 6 }
+              },
+              y: {
+                beginAtZero: false
+              }
+            }
+          }
+        });
+      } else {
+        balanceChart.data.labels = balanceLabels;
+        balanceChart.data.datasets[0].data = balanceData;
+        balanceChart.update();
+      }
+    }
+
+    // 서버에 저장된 히스토리 가져오기
+    async function fetchBalanceHistory() {
+      try {
+        const res = await fetch("/api/balance-history");
+        const data = await res.json();
+
+        if (data.status !== "ok" || !Array.isArray(data.history)) {
+          return;
+        }
+
+        balanceLabels = [];
+        balanceData = [];
+
+        data.history.forEach(point => {
+          const t = new Date(point.timestamp);
+          balanceLabels.push(t.toLocaleTimeString());
+          balanceData.push(point.balance);
+        });
+
+        renderOrUpdateChart();
+      } catch (e) {
+        console.error("balance history error", e);
+      }
+    }
+
+    // 요약 정보 (선물 USDT 잔고) + 서버 히스토리 기록 트리거
+    async function fetchSummary() {
+      try {
+        const res = await fetch("/api/summary");
+        const data = await res.json();
+        const div = document.getElementById("summary-content");
+
+        if (data.status === "ok") {
+          const s = data.summary;
+          const bal = s.futures_usdt_balance;
+
+          div.innerHTML = `
+            <p>모니터링 대상: <strong>Binance 선물 USDT 지갑</strong></p>
+            <p>선물 USDT 잔고: <strong>${bal}</strong> USDT</p>
+            <p>수익률: <strong>${s.pnl_rate === null ? "추후 업데이트 예정" : s.pnl_rate + "%"}</strong></p>
+          `;
+        } else {
+          div.innerHTML = `<p>요약 정보를 불러오지 못했습니다.</p>`;
+        }
+
+        // summary 호출 시 서버가 히스토리에 새 포인트를 추가했으므로,
+        // 최신 히스토리를 다시 가져와 그래프 갱신
+        await fetchBalanceHistory();
+      } catch (e) {
+        document.getElementById("summary-content").innerHTML =
+          `<p>요약 정보를 불러오는 중 오류가 발생했습니다.</p>`;
+      }
+    }
+
+    // 현재 선물 잔고 텍스트 표시용 (free/locked)
+    async function fetchBalance() {
+      try {
+        const res = await fetch("/api/balance");
+        const data = await res.json();
+        const text = document.getElementById("futures-balance-text");
+
+        if (data.status === "ok" && Array.isArray(data.balances) && data.balances.length > 0) {
+          const b = data.balances[0];
+          text.textContent = `현재 잔고: ${b.total} USDT (사용 가능: ${b.free.toFixed(4)} / 잠김: ${b.locked.toFixed(4)})`;
+        } else {
+          text.textContent = "표시할 선물 잔고가 없습니다.";
+        }
+      } catch (e) {
+        document.getElementById("futures-balance-text").textContent =
+          "선물 잔고를 불러오는 중 오류가 발생했습니다.";
+      }
+    }
+
+    // ===== 댓글 기능 =====
+    async function fetchComments() {
+      try {
+        const res = await fetch("/api/comments");
+        const data = await res.json();
+        const list = document.getElementById("comment-list");
+        list.innerHTML = "";
+
+        if (!Array.isArray(data) || data.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "아직 댓글이 없습니다. 첫 댓글의 주인공이 되어보세요!";
+          list.appendChild(li);
+          return;
+        }
+
+        data.forEach(c => {
+          const li = document.createElement("li");
+          const timeStr = new Date(c.created_at).toLocaleString();
+          li.innerHTML = `
+            <div class="comment-header">
+              <strong>${c.nick}</strong>
+              <span class="comment-time">${timeStr}</span>
+            </div>
+            <div class="comment-body">${c.content}</div>
+          `;
+          list.appendChild(li);
+        });
+      } catch (e) {
+        const list = document.getElementById("comment-list");
+        list.innerHTML = `<li>댓글을 불러오는 중 오류가 발생했습니다.</li>`;
+      }
+    }
+
+    async function submitComment() {
+      const textarea = document.getElementById("comment-input");
+      const content = textarea.value.trim();
+      if (!content) {
+        alert("내용을 입력해주세요.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/comments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content })
+        });
+
+        if (res.ok) {
+          textarea.value = "";
+          await fetchComments();
+        } else {
+          alert("댓글 등록에 실패했습니다.");
+        }
+      } catch (e) {
+        alert("댓글 등록 중 오류가 발생했습니다.");
+      }
+    }
+
+    // ===== 초기 로딩 및 주기적 갱신 =====
+    window.addEventListener("load", () => {
+      // 1) 서버에 쌓여 있던 히스토리 먼저 그리기
+      fetchBalanceHistory();
+      // 2) 요약/현재 잔고/댓글 불러오기
+      fetchSummary();
+      fetchBalance();
+      fetchComments();
+
+      // 30초마다 요약(=서버 로그 추가) + 잔고 텍스트 갱신
+      setInterval(() => {
+        fetchSummary();
+        fetchBalance();
+      }, 30000);
+
+      document
+        .getElementById("comment-submit")
+        .addEventListener("click", submitComment);
+    });
+  </script>
+</body>
+</html>
